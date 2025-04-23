@@ -16,3 +16,14 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.button-container a {
+        margin: 0 10px;
+}

@@ -5,6 +5,10 @@
 }
 
 <h2>World Rankings</h2>
+<p style="color: blue;">@ViewBag.Message</p>
+
+
+<p>Total athletes in DB: @ViewBag.TestCount</p>
 
 @if (Model == null || !Model.Any())
 {
@@ -36,35 +40,53 @@ else
 }
  *@
 
-@model List<TaekwondoRanking.ViewModels.AthletePointsViewModel>
+@model TaekwondoRanking.ViewModels.WorldRankingFilterViewModel
 
 @{
     ViewData["Title"] = "World Rankings";
 }
 
 <h2>World Rankings</h2>
-<p style="color: blue;">@ViewBag.Message</p>
 
+<form asp-action="World" method="post">
+    <div class="form-group">
+        <label>Age Class</label>
+        <select asp-for="SelectedAgeClass" asp-items="new SelectList(Model.AgeClasses)" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select Age Class --</option>
+        </select>
+    </div>
 
-<p>Total athletes in DB: @ViewBag.TestCount</p>
+    <div class="form-group">
+        <label>Gender</label>
+        <select asp-for="SelectedGender" asp-items="new SelectList(Model.Genders)" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select Gender --</option>
+        </select>
+    </div>
 
-@if (Model == null || !Model.Any())
+    <div class="form-group">
+        <label>Category</label>
+        <select asp-for="SelectedCategory" asp-items="new SelectList(Model.Categories)" class="form-control">
+            <option value="">-- Select Category --</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+
+@if (Model.Results != null && Model.Results.Any())
 {
-    <p style="color: red;">No athlete data found.</p>
-}
-else
-{
-    <table class="table table-striped">
+    <hr />
+    <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Id</th>
+                <th>Athlete ID</th>
                 <th>Name</th>
                 <th>Country</th>
                 <th>Total Points</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var athlete in Model)
+            @foreach (var athlete in Model.Results)
             {
                 <tr>
                     <td>@athlete.IdAthlete</td>

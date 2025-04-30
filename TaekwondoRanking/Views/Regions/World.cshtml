@@ -1,5 +1,78 @@
-﻿@{
-    ViewData["Title"] = "World";
+﻿@* @model List<TaekwondoRanking.ViewModels.AthletePointsViewModel>
+
+@{
+    ViewData["Title"] = "World Rankings";
 }
 
-<h1>World Athletes</h1>
+<h2>World Rankings</h2>
+
+@if (Model == null || !Model.Any())
+{
+    <p style="color: red;">No athlete data found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var athlete in Model)
+            {
+                <tr>
+                    <td>@athlete.IdAthlete</td>
+                    <td>@athlete.Name</td>
+                    <td>@athlete.Country</td>
+                    <td>@athlete.TotalPoints</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+ *@
+
+@model List<TaekwondoRanking.ViewModels.AthletePointsViewModel>
+
+@{
+    ViewData["Title"] = "World Rankings";
+}
+
+<h2>World Rankings</h2>
+<p style="color: blue;">@ViewBag.Message</p>
+
+
+<p>Total athletes in DB: @ViewBag.TestCount</p>
+
+@if (Model == null || !Model.Any())
+{
+    <p style="color: red;">No athlete data found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var athlete in Model)
+            {
+                <tr>
+                    <td>@athlete.IdAthlete</td>
+                    <td>@athlete.Name</td>
+                    <td>@athlete.Country</td>
+                    <td>@athlete.TotalPoints</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

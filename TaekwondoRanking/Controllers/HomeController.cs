@@ -48,5 +48,10 @@ namespace TaekwondoRanking.Controllers
 
         public IActionResult World() => View("~/Views/Regions/World.cshtml");
 
+        public IActionResult About()
+        {
+            return View();
+        }
+
     }
 }

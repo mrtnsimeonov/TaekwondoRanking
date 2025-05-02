@@ -30,8 +30,22 @@ namespace TaekwondoRanking.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> World(WorldRankingFilterViewModel model)
+        public async Task<IActionResult> World(WorldRankingFilterViewModel model, string? reset)
         {
+            // If reset button clicked
+            if (!string.IsNullOrEmpty(reset))
+            {
+                model.SelectedAgeClass = null;
+                model.SelectedGender = null;
+                model.SelectedCategory = null;
+                model.Results = null;
+
+                model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
+                model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
+                model.Categories = new List<string>(); // Empty on reset
+                return View(model);
+            }
+
             var categoriesQuery = _context.Categories.AsQueryable();
 
             if (!string.IsNullOrEmpty(model.SelectedAgeClass))
@@ -46,31 +60,29 @@ namespace TaekwondoRanking.Controllers
             var filteredCategoryIds = await categoriesQuery.Select(c => c.IdCategory).ToListAsync();
 
             var athletes = await _context.Results
-    .Include(r => r.IdAthleteNavigation)
-        .ThenInclude(a => a.CountryNavigation)
-    .Include(r => r.IdSubCompetition2Navigation)
-        .ThenInclude(sc2 => sc2.IdCategoryNavigation)
-    .Where(r =>
-        r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == model.SelectedAgeClass &&
-        r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == model.SelectedGender &&
-        r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == model.SelectedCategory)
-    .GroupBy(r => new
-    {
-        r.IdAthleteNavigation.IdAthlete,
-        r.IdAthleteNavigation.Name,
-        Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
-    })
-    .Select(g => new AthletePointsViewModel
-    {
-        IdAthlete = g.Key.IdAthlete,
-        Name = g.Key.Name,
-        Country = g.Key.Country,
-        TotalPoints = g.Sum(x => (int?)x.Points) ?? 0
-    })
-    .OrderByDescending(a => a.TotalPoints)
-    .ToListAsync();
-
-
+                .Include(r => r.IdAthleteNavigation)
+                    .ThenInclude(a => a.CountryNavigation)
+                .Include(r => r.IdSubCompetition2Navigation)
+                    .ThenInclude(sc2 => sc2.IdCategoryNavigation)
+                .Where(r =>
+                    r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == model.SelectedAgeClass &&
+                    r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == model.SelectedGender &&
+                    r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == model.SelectedCategory)
+                .GroupBy(r => new
+                {
+                    r.IdAthleteNavigation.IdAthlete,
+                    r.IdAthleteNavigation.Name,
+                    Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
+                })
+                .Select(g => new AthletePointsViewModel
+                {
+                    IdAthlete = g.Key.IdAthlete,
+                    Name = g.Key.Name,
+                    Country = g.Key.Country,
+                    TotalPoints = g.Sum(x => (int?)x.Points) ?? 0
+                })
+                .OrderByDescending(a => a.TotalPoints)
+                .ToListAsync();
 
             model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
             model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
@@ -84,6 +96,7 @@ namespace TaekwondoRanking.Controllers
 
             return View(model);
         }
+
 
 
 

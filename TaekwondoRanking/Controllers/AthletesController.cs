@@ -14,30 +14,6 @@ namespace TaekwondoRanking.Controllers
             _context = context;
         }
 
-        //public IActionResult World()
-        //{
-        //    //var athletesData = _context.Athletes
-        //    //    .Join(
-        //    //        _context.Results,
-        //    //        athlete => athlete.IdAthlete,
-        //    //        result => result.IdAthlete,
-        //    //        (athlete, result) => new { athlete, result.Points }
-        //    //    )
-        //    //    .GroupBy(a => new { a.athlete.IdAthlete, a.athlete.Name, a.athlete.Country })
-        //    //    .Select(g => new
-        //    //    {
-        //    //        AthleteName = g.Key.Name,
-        //    //        Country = g.Key.Country,
-        //    //        TotalPoints = g.Sum(x => x.Points)
-        //    //    })
-        //    //    .OrderByDescending(a => a.TotalPoints)
-        //    //    .ToList();
-
-        //    //return View("WorldAthletes");
-        //    var test = await _context.Athletes.ToListAsync();
-        //    ViewBag.TestCount = test.Count;
-
-        //}
         public async Task<IActionResult> World()
         {
             try

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
 using TaekwondoRanking.Models;
@@ -56,7 +57,14 @@ namespace TaekwondoRanking.Controllers
         {
             return View();
         }
-
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+        public IActionResult TournamentResults()
+        {
+            return View();
+        }
 
     }
 }

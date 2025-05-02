@@ -1,0 +1,71 @@
+﻿@model Dictionary<int, List<TaekwondoRanking.Models.Competition>>
+@{
+    ViewData["Title"] = "Tournament Results";
+}
+
+<h2>Tournament Results</h2>
+
+<div class="accordion" id="yearAccordion">
+    @foreach (var yearGroup in Model)
+    {
+        var yearId = $"year-{yearGroup.Key}";
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="@yearId-heading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@yearId" aria-expanded="false" aria-controls="@yearId">
+                    @yearGroup.Key
+                </button>
+            </h2>
+            <div id="@yearId" class="accordion-collapse collapse" aria-labelledby="@yearId-heading" data-bs-parent="#yearAccordion">
+                <div class="accordion-body">
+                    <div class="accordion" id="tournamentAccordion-@yearGroup.Key">
+                        @foreach (var tournament in yearGroup.Value)
+                        {
+                            var tournamentId = $"tournament-{tournament.IdCompetition}";
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="@tournamentId-heading">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@tournamentId" aria-expanded="false" aria-controls="@tournamentId">
+                                        @tournament.NameCompetition
+                                    </button>
+                                </h2>
+                                <div id="@tournamentId" class="accordion-collapse collapse" aria-labelledby="@tournamentId-heading" data-bs-parent="#tournamentAccordion-@yearGroup.Key">
+                                    <div class="accordion-body">
+                                        <div class="accordion" id="ageClassAccordion-@tournament.IdCompetition">
+                                            @foreach (var sc1 in tournament.SubCompetition1s.GroupBy(sc1 => sc1.AgeClassNavigation.NameAgeClass))
+                                            {
+                                                var ageClassId = $"ageclass-{tournament.IdCompetition}-{sc1.Key}";
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="@ageClassId-heading">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@ageClassId" aria-expanded="false" aria-controls="@ageClassId">
+                                                            @sc1.Key
+                                                        </button>
+                                                    </h2>
+                                                    <div id="@ageClassId" class="accordion-collapse collapse" aria-labelledby="@ageClassId-heading" data-bs-parent="#ageClassAccordion-@tournament.IdCompetition">
+                                                        <div class="accordion-body">
+                                                            <ul>
+                                                                @foreach (var sc1Item in sc1)
+                                                                {
+                                                                    foreach (var sc2 in sc1Item.SubCompetition2s)
+                                                                    {
+                                                                        <li>
+                                                                            <a asp-action="CategoryResults" asp-route-subCompetition2Id="@sc2.IdSubCompetition2">
+                                                                                @sc2.IdCategoryNavigation?.NameCategory
+                                                                            </a>
+                                                                        </li>
+                                                                    }
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

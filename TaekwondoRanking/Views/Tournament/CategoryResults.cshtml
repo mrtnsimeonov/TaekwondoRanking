@@ -1,0 +1,28 @@
+﻿@model List<TaekwondoRanking.Models.Result>
+@{
+    ViewData["Title"] = "Category Results";
+}
+
+<h2>@ViewBag.CategoryName Results</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Athlete</th>
+            <th>ID</th>
+            <th>Place</th>
+            <th>Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.IdAthleteNavigation?.Name</td>
+                <td>@r.IdAthlete</td>
+                <td>@r.Place</td>
+                <td>@r.Points</td>
+            </tr>
+        }
+    </tbody>
+</table>

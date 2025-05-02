@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Tournament Results";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (User.Identity != null && User.Identity.IsAuthenticated)
+{
+    <p>This is the tournament results page.</p>
+}
+else
+{
+    <script>
+        alert("You need to be logged in to access this page.");
+    </script>
+}

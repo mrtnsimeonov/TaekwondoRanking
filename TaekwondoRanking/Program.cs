@@ -5,28 +5,33 @@ using TaekwondoRanking.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Connection string for both contexts
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-
+// Register the Identity DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Register CompetitionDbContext (for domain-specific data)
+// Register your domain-specific context (Competition)
 builder.Services.AddDbContext<CompetitionDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+// Helpful error pages for development
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Add ASP.NET Identity with default UI and EF store
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>();
+.AddEntityFrameworkStores<ApplicationDbContext>();
 
+// Add MVC support
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// Development environment config
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -37,15 +42,18 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// Middleware pipeline
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseAuthentication(); // Make sure this is before UseAuthorization
 app.UseAuthorization();
 
+// Routing
 app.MapDefaultControllerRoute();
-app.MapRazorPages();
+app.MapRazorPages(); // Required for Identity pages to work
 
 app.Run();

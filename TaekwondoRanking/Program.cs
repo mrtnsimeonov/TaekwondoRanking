@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Data;
 using TaekwondoRanking.Models;
+using TaekwondoRanking.Services; // <-- Add this if your services are in a "Services" folder
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,13 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 // Add MVC support
 builder.Services.AddControllersWithViews();
+
+// Register your application services
+builder.Services.AddScoped<ICompetitionService, CompetitionService>();
+builder.Services.AddScoped<IAthleteService, AthleteService>();
+builder.Services.AddScoped<IRegionService, RegionService>();
+
+
 
 var app = builder.Build();
 

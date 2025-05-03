@@ -41,6 +41,33 @@ namespace TaekwondoRanking.Controllers
                 return View(new List<AthletePointsViewModel>());
             }
         }
+        public async Task<IActionResult> History(string id)
+        {
+            var athlete = await _context.Athletes.FindAsync(id);
+            if (athlete == null) return NotFound();
+
+            var history = await _context.Results
+                .Where(r => r.IdAthlete == id)
+                .Select(r => new AthleteTournamentHistoryViewModel
+                {
+                    CompetitionName = r.IdSubCompetition2Navigation.IdSubCompetition1Navigation.IdCompetitionNavigation.NameCompetition,
+                    RangeLabel = r.IdSubCompetition2Navigation.IdSubCompetition1Navigation.IdCompetitionNavigation.RangeLabel,
+                    Country = r.IdSubCompetition2Navigation.IdSubCompetition1Navigation.IdCompetitionNavigation.CountryNavigation.NameCountry,
+                    AgeClass = r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClassNavigation.NameAgeClass,
+                    Category = r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory,
+                    Place = r.Place ?? 0,
+                    Points = r.Points ?? 0,
+                    FromDate = r.IdSubCompetition2Navigation.IdSubCompetition1Navigation.IdCompetitionNavigation.FromDate ?? DateTime.MinValue
+                })
+                .OrderBy(h => h.FromDate)
+                .ToListAsync();
+
+            ViewBag.AthleteName = athlete.Name;
+            return View(history);
+        }
+
+
+
 
 
 

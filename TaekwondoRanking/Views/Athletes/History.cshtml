@@ -1,0 +1,37 @@
+﻿@using TaekwondoRanking.ViewModels
+
+
+@model List<AthleteTournamentHistoryViewModel>
+@{
+    ViewData["Title"] = "Tournament History";
+}
+
+<h2>@ViewBag.AthleteName's Tournament History</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-primary">
+        <tr>
+            <th>Event</th>
+            <th>G-Rank</th>
+            <th>Country</th>
+            <th>Age Class</th>
+            <th>Category</th>
+            <th>Place</th>
+            <th>Ranking Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@row.CompetitionName</td>
+                <td>@row.RangeLabel</td>
+                <td>@row.Country</td>
+                <td>@row.AgeClass</td>
+                <td>@row.Category</td>
+                <td>@row.Place</td>
+                <td>@row.Points</td>
+            </tr>
+        }
+    </tbody>
+</table>

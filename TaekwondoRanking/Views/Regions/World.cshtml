@@ -7,7 +7,6 @@
 <h2>World Rankings</h2>
 
 <form asp-action="World" method="post">
-
     <div class="form-group mb-3">
         <input type="text" name="SearchQuery" class="form-control" placeholder="Search for athlete by name..." value="@Model.SearchQuery" />
     </div>
@@ -54,7 +53,16 @@
             {
                 <tr>
                     <td>@athlete.IdAthlete</td>
-                    <td>@athlete.Name</td>
+                    <td>
+                        @Html.ActionLink(
+                athlete.Name,
+                "History",         // ✅ Correct action name
+                "Athletes",        // ✅ Correct controller name (plural)
+                new { id = athlete.IdAthlete },
+                new { @class = "text-decoration-none" }
+                )
+
+                    </td>
                     <td>@athlete.Country</td>
                     <td>@athlete.TotalPoints</td>
                 </tr>

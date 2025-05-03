@@ -1,6 +1,4 @@
-﻿
-
-@model TaekwondoRanking.ViewModels.WorldRankingFilterViewModel
+﻿@model TaekwondoRanking.ViewModels.WorldRankingFilterViewModel
 
 @{
     ViewData["Title"] = "World Rankings";
@@ -9,6 +7,11 @@
 <h2>World Rankings</h2>
 
 <form asp-action="World" method="post">
+
+    <div class="form-group mb-3">
+        <input type="text" name="SearchQuery" class="form-control" placeholder="Search for athlete by name..." value="@Model.SearchQuery" />
+    </div>
+
     <div class="form-group">
         <label>Age Class</label>
         <select asp-for="SelectedAgeClass" asp-items="new SelectList(Model.AgeClasses)" class="form-control" onchange="this.form.submit()">

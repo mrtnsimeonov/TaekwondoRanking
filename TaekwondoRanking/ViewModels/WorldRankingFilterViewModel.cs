@@ -11,6 +11,8 @@
         public List<string> Categories { get; set; }
 
         public List<AthletePointsViewModel> Results { get; set; } = new();
+
+        public string? SearchQuery { get; set; }
     }
 
 }

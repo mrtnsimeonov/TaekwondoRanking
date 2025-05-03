@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaekwondoRanking.Models; // <- for CompetitionDbContext
+using TaekwondoRanking.Models;
 using TaekwondoRanking.ViewModels;
 
 namespace TaekwondoRanking.Controllers
@@ -16,36 +16,72 @@ namespace TaekwondoRanking.Controllers
 
         public async Task<IActionResult> World()
         {
-            var ageClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
-            var genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
-
             var model = new WorldRankingFilterViewModel
             {
-                AgeClasses = ageClasses,
-                Genders = genders,
-                Categories = new List<string>() // initially empty
+                AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync(),
+                Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync(),
+                Categories = new List<string>(),
+                SearchQuery = "", // Added for search input
+                Results = new List<AthletePointsViewModel>()
             };
 
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> World(WorldRankingFilterViewModel model, string? reset)
+        public async Task<IActionResult> World(WorldRankingFilterViewModel model, string? reset, string? search)
         {
-            // If reset button clicked
+            // Reset logic
             if (!string.IsNullOrEmpty(reset))
             {
                 model.SelectedAgeClass = null;
                 model.SelectedGender = null;
                 model.SelectedCategory = null;
+                model.SearchQuery = null;
                 model.Results = null;
 
                 model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
                 model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
-                model.Categories = new List<string>(); // Empty on reset
+                model.Categories = new List<string>();
                 return View(model);
             }
 
+            // Search logic
+            if (!string.IsNullOrWhiteSpace(model.SearchQuery))
+            {
+                string searchLower = model.SearchQuery.ToLower();
+
+                var searchResults = await _context.Results
+                    .Include(r => r.IdAthleteNavigation)
+                        .ThenInclude(a => a.CountryNavigation)
+                    .GroupBy(r => new
+                    {
+                        r.IdAthleteNavigation.IdAthlete,
+                        r.IdAthleteNavigation.Name,
+                        Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
+                    })
+                    .Where(g =>
+                        g.Key.Name.ToLower().Contains(searchLower))
+                    .Select(g => new AthletePointsViewModel
+                    {
+                        IdAthlete = g.Key.IdAthlete,
+                        Name = g.Key.Name,
+                        Country = g.Key.Country,
+                        TotalPoints = g.Sum(x => (int?)x.Points) ?? 0
+                    })
+                    .OrderByDescending(a => a.TotalPoints)
+                    .ToListAsync();
+
+                model.Results = searchResults;
+
+                model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
+                model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
+                model.Categories = new List<string>();
+
+                return View(model);
+            }
+
+            // Filtered results logic
             var categoriesQuery = _context.Categories.AsQueryable();
 
             if (!string.IsNullOrEmpty(model.SelectedAgeClass))
@@ -96,9 +132,6 @@ namespace TaekwondoRanking.Controllers
 
             return View(model);
         }
-
-
-
 
         public IActionResult Bulgaria()
         {

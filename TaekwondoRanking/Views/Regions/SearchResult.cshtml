@@ -1,0 +1,32 @@
+﻿@model IEnumerable<AthleteSearchResultViewModel>
+
+<h2>Search Results</h2>
+
+@if (!Model.Any())
+{
+    <p>No athletes found matching your search.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Athlete ID</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var athlete in Model)
+            {
+                <tr>
+                    <td>@athlete.AthleteId</td>
+                    <td>@athlete.FullName</td>
+                    <td>@athlete.Country</td>
+                    <td>@athlete.Points</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

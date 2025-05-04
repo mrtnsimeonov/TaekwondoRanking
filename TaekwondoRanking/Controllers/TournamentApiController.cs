@@ -19,18 +19,26 @@ namespace TaekwondoRanking.Controllers
         public IActionResult Filter(string? year, string? category, string? region)
         {
             var results = _competitionService.FilterTournaments(year, category, region)
-                .Select(c => new CompetitionViewModel
-                {
-                    IdCompetition = c.IdCompetition,
-                    NameCompetition = c.NameCompetition,
-                    Country = c.Country,
-                    RangeLabel = c.RangeLabel,
-                    FromDate = c.FromDate,
-                    TillDate = c.TillDate
-                });
+    .Select(c => new CompetitionViewModel
+    {
+        IdCompetition = c.IdCompetition,
+        NameCompetition = c.NameCompetition,
+        Country = c.Country,
+        RangeLabel = c.RangeLabel,
+        FromDate = c.FromDate,
+        TillDate = c.TillDate
+    })
+    .ToList();
+
+            if (!results.Any())
+            {
+                // Return 200 but empty array (frontend must check if array is empty)
+                return Ok(results);
+            }
 
             return Ok(results);
         }
+
 
         [HttpGet("details/{id}")]
         public IActionResult Details(int id)

@@ -27,6 +27,17 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        context.Response.Redirect("/Error/401");
+        return Task.CompletedTask;
+    };
+});
+
+
 // Add MVC support
 builder.Services.AddControllersWithViews();
 
@@ -59,6 +70,9 @@ app.UseRouting();
 
 app.UseAuthentication(); // Make sure this is before UseAuthorization
 app.UseAuthorization();
+
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
 
 // Routing
 app.MapDefaultControllerRoute();

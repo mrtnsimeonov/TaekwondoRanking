@@ -5,7 +5,6 @@ using TaekwondoRanking.ViewModels;
 
 namespace TaekwondoRanking.Controllers
 {
-    [Authorize]
     public class AthletesController : Controller
     {
         private readonly IAthleteService _athleteService;

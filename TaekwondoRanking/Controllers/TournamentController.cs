@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Models;
 
 namespace TaekwondoRanking.Controllers
 {
+    [Authorize]
     public class TournamentController : Controller
     {
         private readonly CompetitionDbContext _context;

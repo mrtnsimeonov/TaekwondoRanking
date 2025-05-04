@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaekwondoRanking.ViewModels;
 
 namespace TaekwondoRanking.Controllers
 {
+    [Authorize]
     public class RegionsController : Controller
     {
         private readonly IRegionService _regionService;

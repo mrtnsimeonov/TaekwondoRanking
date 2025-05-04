@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using TaekwondoRanking.Services;
 using TaekwondoRanking.ViewModels;
 
@@ -9,6 +10,9 @@ namespace TaekwondoRanking.Controllers
     public class TournamentApiController : ControllerBase
     {
         private readonly ICompetitionService _competitionService;
+        private readonly IMapper _mapper;
+
+
 
         public TournamentApiController(ICompetitionService competitionService)
         {
@@ -19,24 +23,26 @@ namespace TaekwondoRanking.Controllers
         public IActionResult Filter(string? year, string? category, string? region)
         {
             var results = _competitionService.FilterTournaments(year, category, region)
-    .Select(c => new CompetitionViewModel
-    {
-        IdCompetition = c.IdCompetition,
-        NameCompetition = c.NameCompetition,
-        Country = c.Country,
-        RangeLabel = c.RangeLabel,
-        FromDate = c.FromDate,
-        TillDate = c.TillDate
-    })
-    .ToList();
+                .Select(c => new CompetitionViewModel
+                {
+                    IdCompetition = c.IdCompetition,
+                    NameCompetition = c.NameCompetition,
+                    Country = c.Country,
+                    RangeLabel = c.RangeLabel,
+                    FromDate = c.FromDate,
+                    TillDate = c.TillDate
+                })
+                .ToList();
 
-            if (!results.Any())
+            string message = results.Any()
+                ? "Tournaments found."
+                : "No tournaments match the selected filters.";
+
+            return Ok(new
             {
-                // Return 200 but empty array (frontend must check if array is empty)
-                return Ok(results);
-            }
-
-            return Ok(results);
+                Message = message,
+                Data = results
+            });
         }
 
 
@@ -51,11 +57,8 @@ namespace TaekwondoRanking.Controllers
             var subComp1s = tournament.SubCompetition1s.Select(sc1 => new SubCompetition1ViewModel
             {
                 AgeClassName = sc1.AgeClassNavigation?.NameAgeClass,
-                Categories = sc1.SubCompetition2s.Select(sc2 => new SubCompetition2ViewModel
-                {
-                    CategoryId = sc2.IdSubCompetition2,
-                    CategoryName = sc2.IdCategoryNavigation?.NameCategory
-                }).ToList()
+                Categories = sc1.SubCompetition2s.Select(sc2 => _mapper.Map<SubCompetition2ViewModel>(sc2)
+ ).ToList()
 
             }).ToList();
 

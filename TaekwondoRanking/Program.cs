@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Data;
+using TaekwondoRanking.Mappings;
 using TaekwondoRanking.Models;
 using TaekwondoRanking.Services; // <-- Add this if your services are in a "Services" folder
 
@@ -46,6 +47,7 @@ builder.Services.AddScoped<ICompetitionService, CompetitionService>();
 builder.Services.AddScoped<IAthleteService, AthleteService>();
 builder.Services.AddScoped<IRegionService, RegionService>();
 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 
 var app = builder.Build();

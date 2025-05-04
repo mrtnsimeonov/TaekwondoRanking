@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Live Search";
+}
+<h2>Live Search</h2>
+
+<input type="text" id="searchBox" placeholder="Enter athlete name..." />
+<ul id="results"></ul>
+
+@section Scripts {
+    <script>
+        document.getElementById("searchBox").addEventListener("input", function () {
+            const query = this.value;
+            fetch(`/api/athletesapi/search?name=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const results = document.getElementById("results");
+                    results.innerHTML = "";
+                    data.forEach(athlete => {
+                        const li = document.createElement("li");
+                        li.textContent = athlete.name;
+                        results.appendChild(li);
+                    });
+                });
+        });
+    </script>
+}

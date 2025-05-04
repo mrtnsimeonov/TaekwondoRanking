@@ -48,4 +48,11 @@ public class AthleteService : IAthleteService
             .OrderBy(h => h.FromDate)
             .ToListAsync();
     }
+    public IEnumerable<Athlete> SearchAthletesByName(string name)
+    {
+        return _context.Athletes
+            .Where(a => a.Name.Contains(name))
+            .ToList();
+    }
+
 }

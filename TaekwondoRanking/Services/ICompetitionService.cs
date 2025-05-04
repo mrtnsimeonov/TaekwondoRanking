@@ -1,13 +1,19 @@
-﻿using TaekwondoRanking.Models;
+﻿using System.Collections.Generic;
+using TaekwondoRanking.Models;
 
 namespace TaekwondoRanking.Services
 {
-
     public interface ICompetitionService
     {
-        Dictionary<int, List<Competition>> GetCompetitionsGroupedByYear();
-        (List<Result> Results, string? CategoryName) GetCategoryResults(int subCompetition2Id);
+        IEnumerable<Competition> GetAll();
+        Competition GetById(int id);
+        void Add(Competition competition);
+        void Update(Competition competition);
+        void Delete(int id);
+
+        // ✅ NEW: AJAX filtering support
+        IEnumerable<Competition> FilterTournaments(string? year, string? category, string? region);
+        Competition GetByIdWithDetails(int id);
+
     }
-
-
 }

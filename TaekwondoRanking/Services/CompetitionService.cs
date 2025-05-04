@@ -1,47 +1,81 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using TaekwondoRanking.Data;
 using TaekwondoRanking.Models;
-using TaekwondoRanking.Services;
 
-public class CompetitionService : ICompetitionService
+namespace TaekwondoRanking.Services
 {
-    private readonly CompetitionDbContext _context;
-
-    public CompetitionService(CompetitionDbContext context)
+    public class CompetitionService : ICompetitionService
     {
-        _context = context;
-    }
+        private readonly CompetitionDbContext _context;
 
-    public Dictionary<int, List<Competition>> GetCompetitionsGroupedByYear()
-    {
-        return _context.Competitions
-            .Include(c => c.SubCompetition1s)
-                .ThenInclude(sc1 => sc1.AgeClassNavigation)
-            .Include(c => c.SubCompetition1s)
-                .ThenInclude(sc1 => sc1.SubCompetition2s)
-                    .ThenInclude(sc2 => sc2.IdCategoryNavigation)
-            .OrderBy(c => c.FromDate)
-            .AsEnumerable()
-            .GroupBy(c => c.FromDate?.Year ?? 0)
-            .OrderByDescending(g => g.Key)
-            .ToDictionary(
-                g => g.Key,
-                g => g.ToList()
-            );
-    }
+        public CompetitionService(CompetitionDbContext context)
+        {
+            _context = context;
+        }
 
-    public (List<Result> Results, string? CategoryName) GetCategoryResults(int subCompetition2Id)
-    {
-        var results = _context.Results
-            .Where(r => r.IdSubCompetition2 == subCompetition2Id)
-            .Include(r => r.IdAthleteNavigation)
-            .OrderBy(r => r.Place)
-            .ToList();
+        public IEnumerable<Competition> GetAll()
+        {
+            return _context.Competitions.ToList();
+        }
 
-        var category = _context.SubCompetition2s
-            .Include(sc2 => sc2.IdCategoryNavigation)
-            .FirstOrDefault(sc2 => sc2.IdSubCompetition2 == subCompetition2Id)?
-            .IdCategoryNavigation?.NameCategory;
+        public Competition GetById(int id)
+        {
+            return _context.Competitions.FirstOrDefault(c => c.IdCompetition == id);
+        }
 
-        return (results, category);
+        public void Add(Competition competition)
+        {
+            _context.Competitions.Add(competition);
+            _context.SaveChanges();
+        }
+
+        public void Update(Competition competition)
+        {
+            _context.Competitions.Update(competition);
+            _context.SaveChanges();
+        }
+
+        public void Delete(int id)
+        {
+            var comp = _context.Competitions.FirstOrDefault(c => c.IdCompetition == id);
+            if (comp != null)
+            {
+                _context.Competitions.Remove(comp);
+                _context.SaveChanges();
+            }
+        }
+
+
+        // ✅ NEW: AJAX filter method
+        public IEnumerable<Competition> FilterTournaments(string? year, string? category, string? region)
+        {
+            var query = _context.Competitions.AsQueryable();
+
+            if (!string.IsNullOrEmpty(year))
+                query = query.Where(c => c.FromDate.HasValue && c.FromDate.Value.Year.ToString() == year);
+
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(c => c.RangeLabel != null && c.RangeLabel == category);
+
+            if (!string.IsNullOrEmpty(region))
+                query = query.Where(c => c.Country != null && c.Country == region);
+
+            return query.ToList();
+        }
+        public Competition GetByIdWithDetails(int id)
+        {
+            return _context.Competitions
+                .Include(c => c.SubCompetition1s)
+                    .ThenInclude(sc1 => sc1.AgeClassNavigation)
+                .Include(c => c.SubCompetition1s)
+                    .ThenInclude(sc1 => sc1.SubCompetition2s)
+                        .ThenInclude(sc2 => sc2.IdCategoryNavigation)
+                .FirstOrDefault(c => c.IdCompetition == id);
+        }
+
+
+
     }
 }

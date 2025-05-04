@@ -1,71 +1,168 @@
-﻿@model Dictionary<int, List<TaekwondoRanking.Models.Competition>>
-@{
+﻿@{
     ViewData["Title"] = "Tournament Results";
 }
 
 <h2>Tournament Results</h2>
 
-<div class="accordion" id="yearAccordion">
-    @foreach (var yearGroup in Model)
-    {
-        var yearId = $"year-{yearGroup.Key}";
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="@yearId-heading">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@yearId" aria-expanded="false" aria-controls="@yearId">
-                    @yearGroup.Key
-                </button>
-            </h2>
-            <div id="@yearId" class="accordion-collapse collapse" aria-labelledby="@yearId-heading" data-bs-parent="#yearAccordion">
-                <div class="accordion-body">
-                    <div class="accordion" id="tournamentAccordion-@yearGroup.Key">
-                        @foreach (var tournament in yearGroup.Value)
-                        {
-                            var tournamentId = $"tournament-{tournament.IdCompetition}";
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="@tournamentId-heading">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@tournamentId" aria-expanded="false" aria-controls="@tournamentId">
-                                        @tournament.NameCompetition
-                                    </button>
-                                </h2>
-                                <div id="@tournamentId" class="accordion-collapse collapse" aria-labelledby="@tournamentId-heading" data-bs-parent="#tournamentAccordion-@yearGroup.Key">
-                                    <div class="accordion-body">
-                                        <div class="accordion" id="ageClassAccordion-@tournament.IdCompetition">
-                                            @foreach (var sc1 in tournament.SubCompetition1s.GroupBy(sc1 => sc1.AgeClassNavigation.NameAgeClass))
-                                            {
-                                                var ageClassId = $"ageclass-{tournament.IdCompetition}-{sc1.Key}";
-                                                <div class="accordion-item">
-                                                    <h2 class="accordion-header" id="@ageClassId-heading">
-                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#@ageClassId" aria-expanded="false" aria-controls="@ageClassId">
-                                                            @sc1.Key
-                                                        </button>
-                                                    </h2>
-                                                    <div id="@ageClassId" class="accordion-collapse collapse" aria-labelledby="@ageClassId-heading" data-bs-parent="#ageClassAccordion-@tournament.IdCompetition">
-                                                        <div class="accordion-body">
-                                                            <ul>
-                                                                @foreach (var sc1Item in sc1)
-                                                                {
-                                                                    foreach (var sc2 in sc1Item.SubCompetition2s)
-                                                                    {
-                                                                        <li>
-                                                                            <a asp-action="CategoryResults" asp-route-subCompetition2Id="@sc2.IdSubCompetition2">
-                                                                                @sc2.IdCategoryNavigation?.NameCategory
-                                                                            </a>
-                                                                        </li>
-                                                                    }
-                                                                }
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
+<!-- Filter Dropdowns -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <select id="yearFilter" class="form-select">
+            <option value="">All Years</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select id="categoryFilter" class="form-select">
+            <option value="">All Categories</option>
+            <option value="G1">G1</option>
+            <option value="G2">G2</option>
+            <option value="G3">G3</option>
+            <option value="G8">G8</option>
+            <option value="G10">G10</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select id="regionFilter" class="form-select">
+            <option value="">All Countries</option>
+            <option value="SRB">Serbia (SRB)</option>
+            <option value="TUR">Turkey (TUR)</option>
+            <option value="AUT">Austria (AUT)</option>
+            <option value="ALB">Albania (ALB)</option>
+            <option value="GER">Germany (GER)</option>
+        </select>
+    </div>
 </div>
+
+<!-- Loading Spinner -->
+<div id="loadingIndicator" style="display: none;" class="mb-4">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+<!-- Dynamic Tournament Content -->
+<div class="accordion" id="resultsAccordionContainer"></div>
+
+@section Scripts {
+    <script>
+        function fetchFilteredTournaments() {
+            const year = document.getElementById("yearFilter").value;
+            const category = document.getElementById("categoryFilter").value;
+            const region = document.getElementById("regionFilter").value;
+
+            const spinner = document.getElementById("loadingIndicator");
+            spinner.style.display = "block";
+
+            fetch(`/api/tournamentapi/filter?year=${year}&category=${category}&region=${region}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById("resultsAccordionContainer");
+                    container.innerHTML = "";
+                    spinner.style.display = "none";
+
+                    const groupedByYear = {};
+
+                    data.forEach(t => {
+                        const fromYear = new Date(t.fromDate).getFullYear();
+                        if (!groupedByYear[fromYear]) groupedByYear[fromYear] = [];
+                        groupedByYear[fromYear].push(t);
+                    });
+
+                    for (const [year, tournaments] of Object.entries(groupedByYear)) {
+                        const yearId = `year-${year}`;
+                        let html = `
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="${yearId}-heading">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${yearId}" aria-expanded="false" aria-controls="${yearId}">
+                                            ${year}
+                                        </button>
+                                    </h2>
+                                    <div id="${yearId}" class="accordion-collapse collapse" aria-labelledby="${yearId}-heading" data-bs-parent="#resultsAccordionContainer">
+                                        <div class="accordion-body">
+                                            <div class="accordion" id="tournamentAccordion-${year}">`;
+
+                        tournaments.forEach(t => {
+                            const tid = `tournament-${t.idCompetition}`;
+                            html += `
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="${tid}-heading">
+                                            <button class="accordion-button collapsed tournament-toggle" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#${tid}"
+                                                    aria-expanded="false"
+                                                    aria-controls="${tid}"
+                                                    data-tournament-id="${t.idCompetition}">
+                                                ${t.nameCompetition}
+                                            </button>
+                                        </h2>
+                                        <div id="${tid}" class="accordion-collapse collapse" aria-labelledby="${tid}-heading" data-bs-parent="#tournamentAccordion-${year}">
+                                            <div class="accordion-body" id="tournament-details-${t.idCompetition}" data-loaded="false">
+                                                <em>Click to load tournament results...</em>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                        });
+
+                        html += `</div></div></div></div>`;
+                        container.innerHTML += html;
+                    }
+                })
+                .catch(err => {
+                    spinner.style.display = "none";
+                    alert("Error loading tournament results.");
+                    console.error(err);
+                });
+        }
+
+        document.getElementById("yearFilter").addEventListener("change", fetchFilteredTournaments);
+        document.getElementById("categoryFilter").addEventListener("change", fetchFilteredTournaments);
+        document.getElementById("regionFilter").addEventListener("change", fetchFilteredTournaments);
+
+        // Load results on page load
+        fetchFilteredTournaments();
+
+        // Fetch tournament details when expanded
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("tournament-toggle")) {
+                const tournamentId = e.target.dataset.tournamentId;
+                const containerId = `tournament-details-${tournamentId}`;
+                const container = document.getElementById(containerId);
+
+                if (container && container.dataset.loaded === "false") {
+                    fetch(`/api/tournamentapi/details/${tournamentId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            container.dataset.loaded = "true";
+                            let html = "";
+
+                            if (data.subCompetitions.length === 0) {
+                                html = "<p><em>No results available for this tournament.</em></p>";
+                            } else {
+                                data.subCompetitions.forEach(sc1 => {
+                                    html += `<strong>${sc1.ageClassName}</strong><ul>`;
+                                    sc1.categories.forEach(cat => {
+                                        html += `<li>
+            <a href="/Tournament/CategoryResults?subCompetition2Id=${cat.categoryId}">
+                ${cat.categoryName}
+            </a>
+        </li>`;
+
+                                    });
+                                    html += `</ul>`;
+                                });
+                            }
+
+                            container.innerHTML = html;
+                        })
+                        .catch(err => {
+                            container.innerHTML = "<p><em>Error loading tournament results.</em></p>";
+                            console.error(err);
+                        });
+                }
+            }
+        });
+    </script>
+}

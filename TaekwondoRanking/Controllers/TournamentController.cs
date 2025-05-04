@@ -1,30 +1,35 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Models;
-using TaekwondoRanking.Services;
 
 namespace TaekwondoRanking.Controllers
 {
-    [Authorize]
     public class TournamentController : Controller
     {
-        private readonly ICompetitionService _competitionService;
+        private readonly CompetitionDbContext _context;
 
-        public TournamentController(ICompetitionService competitionService)
+        public TournamentController(CompetitionDbContext context)
         {
-            _competitionService = competitionService;
+            _context = context;
         }
-
         public IActionResult Index()
         {
-            var data = _competitionService.GetCompetitionsGroupedByYear();
-            return View(data);
+            return View();
         }
-
         public IActionResult CategoryResults(int subCompetition2Id)
         {
-            var (results, categoryName) = _competitionService.GetCategoryResults(subCompetition2Id);
-            ViewBag.CategoryName = categoryName;
+            var results = _context.Results
+                .Where(r => r.IdSubCompetition2 == subCompetition2Id)
+                .Include(r => r.IdAthleteNavigation)
+                .OrderBy(r => r.Place)
+            .ToList();
+
+            var category = _context.SubCompetition2s
+                .Include(sc2 => sc2.IdCategoryNavigation)
+                .FirstOrDefault(sc2 => sc2.IdSubCompetition2 == subCompetition2Id)?
+                .IdCategoryNavigation?.NameCategory;
+
+            ViewBag.CategoryName = category;
             return View(results);
         }
     }

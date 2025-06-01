@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Models;
+using TaekwondoRanking.ViewModels;
 
 namespace TaekwondoRanking.Controllers
 {
@@ -34,5 +35,6 @@ namespace TaekwondoRanking.Controllers
             ViewBag.CategoryName = category;
             return View(results);
         }
+        
     }
 }

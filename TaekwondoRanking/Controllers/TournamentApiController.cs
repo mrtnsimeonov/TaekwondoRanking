@@ -14,10 +14,12 @@ namespace TaekwondoRanking.Controllers
 
 
 
-        public TournamentApiController(ICompetitionService competitionService)
+        public TournamentApiController(ICompetitionService competitionService, IMapper mapper)
         {
             _competitionService = competitionService;
+            _mapper = mapper;
         }
+
 
         [HttpGet("filter")]
         public IActionResult Filter(string? year, string? category, string? region)
@@ -54,20 +56,13 @@ namespace TaekwondoRanking.Controllers
             if (tournament == null)
                 return NotFound();
 
-            var subComp1s = tournament.SubCompetition1s.Select(sc1 => new SubCompetition1ViewModel
-            {
-                AgeClassName = sc1.AgeClassNavigation?.NameAgeClass,
-                Categories = sc1.SubCompetition2s.Select(sc2 => _mapper.Map<SubCompetition2ViewModel>(sc2)
- ).ToList()
+            var subComp1s = _mapper.Map<List<SubCompetition1ViewModel>>(tournament.SubCompetition1s);
 
-            }).ToList();
-
-            var result = new TournamentDetailsViewModel
+            return Ok(new TournamentDetailsViewModel
             {
                 SubCompetitions = subComp1s
-            };
-
-            return Ok(result);
+            });
         }
+
     }
 }

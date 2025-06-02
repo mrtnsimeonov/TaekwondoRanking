@@ -1,8 +1,111 @@
-﻿@{
+﻿@model TaekwondoRanking.ViewModels.ContinentalRankingFilterViewModel
+
+@{
     ViewData["Title"] = "Continental Rankings";
 }
 
 <div class="text-center">
     <h2>@ViewData["Title"]</h2>
-    <p>This is the Continental Rankings page.</p>
 </div>
+
+<form asp-action="Continental" method="post">
+    <div class="form-group mb-3">
+        <input type="text" name="SearchQuery" class="form-control" placeholder="Search for athlete by name..." value="@Model.SearchQuery" />
+    </div>
+
+    <div class="form-group">
+        <label>Continent</label>
+        <select asp-for="SelectedContinent" asp-items="new SelectList(Model.Continents)" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select Continent --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Age Class</label>
+        <select asp-for="SelectedAgeClass" asp-items="new SelectList(Model.AgeClasses)" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select Age Class --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Gender</label>
+        <select asp-for="SelectedGender" asp-items="new SelectList(Model.Genders)" class="form-control" onchange="this.form.submit()">
+            <option value="">-- Select Gender --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Category</label>
+        <select asp-for="SelectedCategory" asp-items="new SelectList(Model.Categories)" class="form-control">
+            <option value="">-- Select Category --</option>
+        </select>
+    </div>
+
+    <button type="submit" name="submitType" value="search" class="btn btn-primary">Search</button>
+    <button type="submit" name="submitType" value="reset" class="btn btn-secondary">Reset</button>
+
+</form>
+<!-- Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Database currently not available
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var showModal = '@TempData["TriggerModal"]' === 'True';
+            if (showModal) {
+                var modal = new bootstrap.Modal(document.getElementById('errorModal'));
+                modal.show();
+            }
+        });
+    </script>
+}
+
+
+
+@if (Model.Results != null && Model.Results.Any())
+{
+    <hr />
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Athlete ID</th>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Total Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var athlete in Model.Results)
+            {
+                <tr>
+                    <td>@athlete.IdAthlete</td>
+                    <td>
+                        @Html.ActionLink(
+                athlete.Name,
+                "History",
+                "Athletes",
+                new { id = athlete.IdAthlete },
+                new { @class = "text-decoration-none" }
+                )
+                    </td>
+                    <td>@athlete.Country</td>
+                    <td>@athlete.TotalPoints</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

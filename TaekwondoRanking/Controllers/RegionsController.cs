@@ -31,8 +31,35 @@ namespace TaekwondoRanking.Controllers
         [HttpGet]
         public IActionResult Continental()
         {
-            return View();
+            var model = new ContinentalRankingFilterViewModel
+            {
+                AgeClasses = new List<string> { "Junior", "Senior" },
+                Genders = new List<string> { "Male", "Female" },
+                Categories = new List<string> { "Flyweight", "Lightweight", "Heavyweight" }
+            };
+
+            return View(model);
         }
+
+        [HttpPost]
+        public IActionResult Continental(ContinentalRankingFilterViewModel model, string? submitType)
+        {
+            model.AgeClasses ??= new List<string> { "Junior", "Senior" };
+            model.Genders ??= new List<string> { "Male", "Female" };
+            model.Categories ??= new List<string> { "Flyweight", "Lightweight", "Heavyweight" };
+            model.Continents ??= new List<string> { "Africa", "Asia", "Europe", "North America", "South America", "Oceania" };
+
+            // Only trigger modal if search button was clicked
+            if (submitType == "search")
+            {
+                TempData["TriggerModal"] = true;
+            }
+
+            return View(model);
+        }
+
+
+
         [HttpGet]
         public IActionResult Country()
         {

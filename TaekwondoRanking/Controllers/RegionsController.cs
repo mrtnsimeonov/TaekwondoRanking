@@ -28,14 +28,17 @@ namespace TaekwondoRanking.Controllers
             return View(updatedModel);
         }
 
-        public IActionResult Bulgaria()
+        [HttpGet]
+        public IActionResult Continental()
+        {
+            return View();
+        }
+        [HttpGet]
+        public IActionResult Country()
         {
             return View();
         }
 
-        public IActionResult Europe()
-        {
-            return View();
-        }
+
     }
 }

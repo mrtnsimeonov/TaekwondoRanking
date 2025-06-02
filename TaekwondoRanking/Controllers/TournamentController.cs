@@ -6,7 +6,6 @@ using TaekwondoRanking.ViewModels;
 
 namespace TaekwondoRanking.Controllers
 {
-    [Authorize]
     public class TournamentController : Controller
     {
         private readonly CompetitionDbContext _context;
@@ -17,8 +16,16 @@ namespace TaekwondoRanking.Controllers
         }
         public IActionResult Index()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData["ShowUnauthorizedModal"] = true;
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Normal logic for showing tournament results
             return View();
         }
+
         public IActionResult CategoryResults(int subCompetition2Id)
         {
             var results = _context.Results

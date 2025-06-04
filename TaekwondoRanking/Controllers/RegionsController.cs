@@ -1,17 +1,22 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using TaekwondoRanking.Services;
 using TaekwondoRanking.ViewModels;
+using TaekwondoRanking.Models;
+using System.Linq;
 
 namespace TaekwondoRanking.Controllers
 {
-    [Authorize]
     public class RegionsController : Controller
     {
         private readonly IRegionService _regionService;
+        private readonly CompetitionDbContext _context; // ADD: Inject DbContext
 
-        public RegionsController(IRegionService regionService)
+        public RegionsController(IRegionService regionService, CompetitionDbContext context)
         {
             _regionService = regionService;
+            _context = context; // ADD
         }
 
         [HttpGet]
@@ -49,7 +54,6 @@ namespace TaekwondoRanking.Controllers
             model.Categories ??= new List<string> { "Flyweight", "Lightweight", "Heavyweight" };
             model.Continents ??= new List<string> { "Africa", "Asia", "Europe", "North America", "South America", "Oceania" };
 
-            // Only trigger modal if search button was clicked
             if (submitType == "search")
             {
                 TempData["TriggerModal"] = true;
@@ -58,14 +62,12 @@ namespace TaekwondoRanking.Controllers
             return View(model);
         }
 
-
-
         [HttpGet]
         public IActionResult Country()
         {
             return View();
         }
 
-
+        
     }
 }

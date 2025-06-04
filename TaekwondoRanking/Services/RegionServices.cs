@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Models;
+using TaekwondoRanking.Services;
 using TaekwondoRanking.ViewModels;
 
 public class RegionService : IRegionService
@@ -111,4 +112,6 @@ public class RegionService : IRegionService
 
         return model;
     }
+ 
+
 }

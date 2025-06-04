@@ -1,7 +1,13 @@
-﻿using TaekwondoRanking.ViewModels;
+﻿using System.Threading.Tasks;
+using TaekwondoRanking.ViewModels;
 
-public interface IRegionService
+namespace TaekwondoRanking.Services
 {
-    Task<WorldRankingFilterViewModel> BuildInitialWorldRankingModelAsync();
-    Task<WorldRankingFilterViewModel> ApplyWorldRankingFiltersAsync(WorldRankingFilterViewModel model, string? reset, string? search);
+    public interface IRegionService
+    {
+        Task<WorldRankingFilterViewModel> BuildInitialWorldRankingModelAsync();
+        Task<WorldRankingFilterViewModel> ApplyWorldRankingFiltersAsync(WorldRankingFilterViewModel model, string? reset, string? search);
+
+        
+    }
 }

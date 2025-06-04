@@ -8,6 +8,9 @@ namespace TaekwondoRanking.Services
         Task<WorldRankingFilterViewModel> BuildInitialWorldRankingModelAsync();
         Task<WorldRankingFilterViewModel> ApplyWorldRankingFiltersAsync(WorldRankingFilterViewModel model, string? reset, string? search);
 
-        
+        Task<CountryRankingFilterViewModel> BuildInitialCountryRankingModelAsync();
+        Task<CountryRankingFilterViewModel> ApplyCountryRankingFiltersAsync(CountryRankingFilterViewModel model, string? reset, string? search);
+
+
     }
 }

@@ -1,8 +1,40 @@
-﻿@{
-    ViewData["Title"] = "Country Rankings";
-}
+﻿@model TaekwondoRanking.ViewModels.CountryRankingFilterViewModel
 
-<div class="text-center">
-    <h2>@ViewData["Title"]</h2>
-    <p>This is the Country Rankings page.</p>
-</div>
+<h2>Country Rankings</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label for="SelectedCountry">Filter by Country</label>
+        <select asp-for="SelectedCountry" asp-items="new SelectList(Model.Countries)">
+            <option value="">-- All Countries --</option>
+        </select>
+        <button type="submit" name="search" value="search" class="btn btn-primary">Search</button>
+        <button type="submit" name="reset" value="reset" class="btn btn-secondary">Reset</button>
+    </div>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Athlete</th>
+            <th>Country</th>
+            <th>Total Points</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int rank = 1;
+            foreach (var athlete in Model.Results)
+            {
+                <tr>
+                    <td>@rank</td>
+                    <td>@athlete.Name</td>
+                    <td>@athlete.Country</td>
+                    <td>@athlete.TotalPoints</td>
+                </tr>
+                rank++;
+            }
+        }
+    </tbody>
+</table>

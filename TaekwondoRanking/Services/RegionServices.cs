@@ -112,6 +112,61 @@ public class RegionService : IRegionService
 
         return model;
     }
- 
+
+    public async Task<CountryRankingFilterViewModel> BuildInitialCountryRankingModelAsync()
+    {
+        var countries = await _context.Countries.Select(c => c.NameCountry).ToListAsync();
+
+        var athletes = _context.Results
+            .GroupBy(r => r.IdAthlete)
+            .Select(g => new AthletePointsViewModel
+            {
+                IdAthlete = g.Key.ToString(),
+                Name = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).Name,
+                Country = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).CountryNavigation.NameCountry,
+                TotalPoints = (int)(g.Sum(r => r.Points) ?? 0)
+            })
+            .OrderByDescending(a => a.TotalPoints)
+            .ToList();
+
+        return new CountryRankingFilterViewModel
+        {
+            Countries = countries,
+            Results = athletes
+        };
+    }
+
+
+    public async Task<CountryRankingFilterViewModel> ApplyCountryRankingFiltersAsync(CountryRankingFilterViewModel model, string? reset, string? search)
+    {
+        if (!string.IsNullOrEmpty(reset))
+        {
+            return await BuildInitialCountryRankingModelAsync();
+        }
+
+        var athletes = _context.Results
+            .GroupBy(r => r.IdAthlete)
+            .Select(g => new AthletePointsViewModel
+            {
+                IdAthlete = g.Key.ToString(),
+                Name = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).Name,
+                Country = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).CountryNavigation.NameCountry,
+                TotalPoints = (int)(g.Sum(r => r.Points) ?? 0)
+
+            });
+
+        if (!string.IsNullOrEmpty(model.SelectedCountry))
+        {
+            athletes = athletes.Where(a => a.Country == model.SelectedCountry);
+        }
+
+        model.Countries = await _context.Countries.Select(c => c.NameCountry).ToListAsync();
+        model.Results = athletes.OrderByDescending(a => a.TotalPoints).ToList();
+
+        return model;
+    }
+
+
+
 
 }

@@ -63,11 +63,20 @@ namespace TaekwondoRanking.Controllers
         }
 
         [HttpGet]
-        public IActionResult Country()
+        public async Task<IActionResult> Country()
         {
-            return View();
+            var model = await _regionService.BuildInitialCountryRankingModelAsync();
+            return View(model);
         }
 
-        
+        [HttpPost]
+        public async Task<IActionResult> Country(CountryRankingFilterViewModel model, string? reset, string? search)
+        {
+            var updatedModel = await _regionService.ApplyCountryRankingFiltersAsync(model, reset, search);
+            return View(updatedModel);
+        }
+
+
+
     }
 }

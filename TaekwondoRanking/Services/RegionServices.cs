@@ -2,6 +2,7 @@
 using TaekwondoRanking.Models;
 using TaekwondoRanking.Services;
 using TaekwondoRanking.ViewModels;
+using TaekwondoRanking.Helpers;
 
 public class RegionService : IRegionService
 {
@@ -12,6 +13,7 @@ public class RegionService : IRegionService
         _context = context;
     }
 
+    // This method can stay as it was, it doesn't deal with the temporary data.
     public async Task<WorldRankingFilterViewModel> BuildInitialWorldRankingModelAsync()
     {
         return new WorldRankingFilterViewModel
@@ -24,6 +26,52 @@ public class RegionService : IRegionService
         };
     }
 
+    private IQueryable<Result> GetFilteredResultsQuery(string? selectedAgeClass, string? selectedGender, string? selectedCategory, string? searchQuery, string? selectedCountry)
+    {
+        IQueryable<Result> query = _context.Results
+            .Include(r => r.IdAthleteNavigation)
+                .ThenInclude(a => a.CountryNavigation)
+            .Include(r => r.IdSubCompetition2Navigation)
+                .ThenInclude(sc2 => sc2.IdCategoryNavigation)
+            .AsQueryable();
+
+        // ✅ FINAL FIX: Directly check if the string Keys of our dictionary contain the string IdAthlete.
+        // EF Core will translate this to an efficient SQL "WHERE IN" or "WHERE NOT IN" clause.
+        if (!TemporaryDeletionManager.TemporarilyDeletedAthleteIds.IsEmpty)
+        {
+            var keys = TemporaryDeletionManager.TemporarilyDeletedAthleteIds.Keys;
+            query = query.Where(r => !keys.Contains(r.IdAthlete));
+        }
+
+        // Apply other database-side filters
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            string searchLower = searchQuery.ToLower();
+            query = query.Where(r =>
+                r.IdAthleteNavigation != null && r.IdAthleteNavigation.Name != null &&
+                r.IdAthleteNavigation.Name.ToLower().Contains(searchLower)
+            );
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(selectedAgeClass))
+                query = query.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == selectedAgeClass);
+
+            if (!string.IsNullOrEmpty(selectedGender))
+                query = query.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == selectedGender);
+
+            if (!string.IsNullOrEmpty(selectedCategory))
+                query = query.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == selectedCategory);
+        }
+
+        if (!string.IsNullOrEmpty(selectedCountry))
+        {
+            query = query.Where(r => r.IdAthleteNavigation.CountryNavigation.NameCountry == selectedCountry);
+        }
+
+        return query;
+    }
+
     public async Task<WorldRankingFilterViewModel> ApplyWorldRankingFiltersAsync(WorldRankingFilterViewModel model, string? reset, string? search)
     {
         if (!string.IsNullOrEmpty(reset))
@@ -31,63 +79,12 @@ public class RegionService : IRegionService
             return await BuildInitialWorldRankingModelAsync();
         }
 
-        if (!string.IsNullOrWhiteSpace(model.SearchQuery))
-        {
-            string searchLower = model.SearchQuery.ToLower();
+        var resultsQuery = GetFilteredResultsQuery(model.SelectedAgeClass, model.SelectedGender, model.SelectedCategory, model.SearchQuery, null);
 
-            var searchResults = await _context.Results
-                .Include(r => r.IdAthleteNavigation)
-                    .ThenInclude(a => a.CountryNavigation)
-                .GroupBy(r => new
-                {
-                    r.IdAthleteNavigation.IdAthlete,
-                    r.IdAthleteNavigation.Name,
-                    Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
-                })
-                .Where(g => g.Key.Name != null && g.Key.Name.ToLower().Contains(searchLower))
-
-                .Select(g => new AthletePointsViewModel
-                {
-                    IdAthlete = g.Key.IdAthlete,
-                    Name = g.Key.Name,
-                    Country = g.Key.Country,
-                    TotalPoints = g.Sum(x => (int?)x.Points) ?? 0
-                })
-                .OrderByDescending(a => a.TotalPoints)
-                .ToListAsync();
-
-            model.Results = searchResults;
-            model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
-            model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
-            model.Categories = new List<string>();
-            return model;
-        }
-
-        var categoriesQuery = _context.Categories.AsQueryable();
-
-        if (!string.IsNullOrEmpty(model.SelectedAgeClass))
-            categoriesQuery = categoriesQuery.Where(c => c.AgeClass == model.SelectedAgeClass);
-
-        if (!string.IsNullOrEmpty(model.SelectedGender))
-            categoriesQuery = categoriesQuery.Where(c => c.Mf == model.SelectedGender);
-
-        if (!string.IsNullOrEmpty(model.SelectedCategory))
-            categoriesQuery = categoriesQuery.Where(c => c.NameCategory == model.SelectedCategory);
-
-        var filteredCategoryIds = await categoriesQuery.Select(c => c.IdCategory).ToListAsync();
-
-        var athletes = await _context.Results
-            .Include(r => r.IdAthleteNavigation)
-                .ThenInclude(a => a.CountryNavigation)
-            .Include(r => r.IdSubCompetition2Navigation)
-                .ThenInclude(sc2 => sc2.IdCategoryNavigation)
-            .Where(r =>
-                r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == model.SelectedAgeClass &&
-                r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == model.SelectedGender &&
-                r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == model.SelectedCategory)
+        model.Results = await resultsQuery
             .GroupBy(r => new
             {
-                r.IdAthleteNavigation.IdAthlete,
+                r.IdAthlete,
                 r.IdAthleteNavigation.Name,
                 Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
             })
@@ -101,94 +98,36 @@ public class RegionService : IRegionService
             .OrderByDescending(a => a.TotalPoints)
             .ToListAsync();
 
-        model.Results = athletes;
+        // Repopulate dropdowns
         model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync();
         model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync();
-        model.Categories = await _context.Categories
-            .Where(c => c.AgeClass == model.SelectedAgeClass && c.Mf == model.SelectedGender)
-            .Select(c => c.NameCategory)
-            .Distinct()
-            .ToListAsync();
+        if (!string.IsNullOrEmpty(model.SelectedAgeClass) && !string.IsNullOrEmpty(model.SelectedGender))
+        {
+            model.Categories = await _context.Categories
+                .Where(c => c.AgeClass == model.SelectedAgeClass && c.Mf == model.SelectedGender)
+                .Select(c => c.NameCategory).Distinct().ToListAsync();
+        }
+        else
+        {
+            model.Categories = new List<string>();
+        }
 
         return model;
     }
 
-    public async Task<CountryRankingFilterViewModel> BuildInitialCountryRankingModelAsync()
-    {
-        var countries = await _context.Countries
-    .OrderBy(c => c.NameCountry)
-    .Select(c => c.NameCountry)
-    .ToListAsync();
-
-        var athletes = _context.Results
-            .GroupBy(r => r.IdAthlete)
-            .Select(g => new AthletePointsViewModel
-            {
-                IdAthlete = g.Key.ToString(),
-                Name = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).Name,
-                Country = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).CountryNavigation.NameCountry,
-                TotalPoints = (int)(g.Sum(r => r.Points) ?? 0)
-            })
-            .OrderByDescending(a => a.TotalPoints)
-            .ToList();
-
-        return new CountryRankingFilterViewModel
-        {
-            Countries = await _context.Countries.OrderBy(c => c.NameCountry).Select(c => c.NameCountry).ToListAsync(),
-            AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync(),
-            Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync(),
-            Categories = await _context.Categories.Select(c => c.NameCategory).Distinct().ToListAsync(),
-            Results = athletes
-        };
-
-    }
-
-
     public async Task<CountryRankingFilterViewModel> ApplyCountryRankingFiltersAsync(CountryRankingFilterViewModel model, string? reset, string? search)
     {
-
         if (!string.IsNullOrEmpty(reset))
         {
             return await BuildInitialCountryRankingModelAsync();
         }
 
+        var resultsQuery = GetFilteredResultsQuery(model.SelectedAgeClass, model.SelectedGender, model.SelectedCategory, null, model.SelectedCountry);
 
-
-
-        // Get base list of results
-        var results = _context.Results
-            .Include(r => r.IdAthleteNavigation)
-                .ThenInclude(a => a.CountryNavigation)
-            .Include(r => r.IdSubCompetition2Navigation)
-                .ThenInclude(sc2 => sc2.IdCategoryNavigation)
-            .AsQueryable();
-
-        // Apply Age Class + Gender + Category filters
-        if (!string.IsNullOrEmpty(model.SelectedAgeClass))
-        {
-            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == model.SelectedAgeClass);
-        }
-
-        if (!string.IsNullOrEmpty(model.SelectedGender))
-        {
-            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == model.SelectedGender);
-        }
-
-        if (!string.IsNullOrEmpty(model.SelectedCategory))
-        {
-            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == model.SelectedCategory);
-        }
-
-        if (!string.IsNullOrEmpty(model.SelectedCountry))
-        {
-            results = results.Where(r => r.IdAthleteNavigation.CountryNavigation.NameCountry == model.SelectedCountry);
-        }
-
-        // Group and project final results
-        var grouped = await results
+        model.Results = await resultsQuery
             .GroupBy(r => new
             {
-                r.IdAthleteNavigation.IdAthlete,
+                r.IdAthlete,
                 r.IdAthleteNavigation.Name,
                 Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
             })
@@ -202,25 +141,10 @@ public class RegionService : IRegionService
             .OrderByDescending(a => a.TotalPoints)
             .ToListAsync();
 
-        // Populate dropdowns
-        model.Countries = await _context.Countries
-            .OrderBy(c => c.NameCountry)
-            .Select(c => c.NameCountry)
-            .ToListAsync();
-
-        model.AgeClasses = await _context.Categories
-            .Select(c => c.AgeClass)
-            .Distinct()
-            .OrderBy(a => a)
-            .ToListAsync();
-
-        model.Genders = await _context.Categories
-            .Select(c => c.Mf)
-            .Distinct()
-            .OrderBy(g => g)
-            .ToListAsync();
-
-        // This is the cascading dropdown part
+        // Repopulate dropdowns
+        model.Countries = await _context.Countries.OrderBy(c => c.NameCountry).Select(c => c.NameCountry).ToListAsync();
+        model.AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().OrderBy(a => a).ToListAsync();
+        model.Genders = await _context.Categories.Select(c => c.Mf).Distinct().OrderBy(g => g).ToListAsync();
         model.Categories = await _context.Categories
             .Where(c =>
                 (string.IsNullOrEmpty(model.SelectedAgeClass) || c.AgeClass == model.SelectedAgeClass) &&
@@ -230,11 +154,38 @@ public class RegionService : IRegionService
             .OrderBy(c => c)
             .ToListAsync();
 
-        model.Results = grouped;
         return model;
     }
 
+    // BuildInitialCountryRankingModelAsync remains largely the same but can also use the helper
+    public async Task<CountryRankingFilterViewModel> BuildInitialCountryRankingModelAsync()
+    {
+        var resultsQuery = GetFilteredResultsQuery(null, null, null, null, null);
 
+        var athletes = await resultsQuery
+            .GroupBy(r => new
+            {
+                r.IdAthlete,
+                r.IdAthleteNavigation.Name,
+                Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
+            })
+            .Select(g => new AthletePointsViewModel
+            {
+                IdAthlete = g.Key.IdAthlete,
+                Name = g.Key.Name,
+                Country = g.Key.Country,
+                TotalPoints = (int)(g.Sum(r => r.Points) ?? 0)
+            })
+            .OrderByDescending(a => a.TotalPoints)
+            .ToListAsync();
 
-
+        return new CountryRankingFilterViewModel
+        {
+            Countries = await _context.Countries.OrderBy(c => c.NameCountry).Select(c => c.NameCountry).ToListAsync(),
+            AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync(),
+            Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync(),
+            Categories = await _context.Categories.Select(c => c.NameCategory).Distinct().ToListAsync(),
+            Results = athletes
+        };
+    }
 }

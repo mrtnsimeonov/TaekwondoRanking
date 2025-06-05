@@ -48,6 +48,7 @@
                 <th>Name</th>
                 <th>Country</th>
                 <th>Total Points</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -58,15 +59,29 @@
                     <td>
                         @Html.ActionLink(
                 athlete.Name,
-                "History",         // ✅ Correct action name
-                "Athletes",        // ✅ Correct controller name (plural)
+                "History",        // Correct action name
+                "Athletes",       // Correct controller name (plural)
                 new { id = athlete.IdAthlete },
                 new { @class = "text-decoration-none" }
                 )
-
                     </td>
                     <td>@athlete.Country</td>
                     <td>@athlete.TotalPoints</td>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <td>
+                            <form id="deleteForm-@athlete.IdAthlete" asp-controller="Athletes" asp-action="Delete" asp-route-id="@athlete.IdAthlete" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmationModal"
+                                        data-formid="deleteForm-@athlete.IdAthlete">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    }
                 </tr>
             }
         </tbody>

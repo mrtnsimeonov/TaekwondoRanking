@@ -115,7 +115,10 @@ public class RegionService : IRegionService
 
     public async Task<CountryRankingFilterViewModel> BuildInitialCountryRankingModelAsync()
     {
-        var countries = await _context.Countries.Select(c => c.NameCountry).ToListAsync();
+        var countries = await _context.Countries
+    .OrderBy(c => c.NameCountry)
+    .Select(c => c.NameCountry)
+    .ToListAsync();
 
         var athletes = _context.Results
             .GroupBy(r => r.IdAthlete)
@@ -131,38 +134,103 @@ public class RegionService : IRegionService
 
         return new CountryRankingFilterViewModel
         {
-            Countries = countries,
+            Countries = await _context.Countries.OrderBy(c => c.NameCountry).Select(c => c.NameCountry).ToListAsync(),
+            AgeClasses = await _context.Categories.Select(c => c.AgeClass).Distinct().ToListAsync(),
+            Genders = await _context.Categories.Select(c => c.Mf).Distinct().ToListAsync(),
+            Categories = await _context.Categories.Select(c => c.NameCategory).Distinct().ToListAsync(),
             Results = athletes
         };
+
     }
 
 
     public async Task<CountryRankingFilterViewModel> ApplyCountryRankingFiltersAsync(CountryRankingFilterViewModel model, string? reset, string? search)
     {
+
         if (!string.IsNullOrEmpty(reset))
         {
             return await BuildInitialCountryRankingModelAsync();
         }
 
-        var athletes = _context.Results
-            .GroupBy(r => r.IdAthlete)
-            .Select(g => new AthletePointsViewModel
-            {
-                IdAthlete = g.Key.ToString(),
-                Name = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).Name,
-                Country = _context.Athletes.FirstOrDefault(a => a.IdAthlete == g.Key).CountryNavigation.NameCountry,
-                TotalPoints = (int)(g.Sum(r => r.Points) ?? 0)
 
-            });
+
+
+        // Get base list of results
+        var results = _context.Results
+            .Include(r => r.IdAthleteNavigation)
+                .ThenInclude(a => a.CountryNavigation)
+            .Include(r => r.IdSubCompetition2Navigation)
+                .ThenInclude(sc2 => sc2.IdCategoryNavigation)
+            .AsQueryable();
+
+        // Apply Age Class + Gender + Category filters
+        if (!string.IsNullOrEmpty(model.SelectedAgeClass))
+        {
+            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.AgeClass == model.SelectedAgeClass);
+        }
+
+        if (!string.IsNullOrEmpty(model.SelectedGender))
+        {
+            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.Mf == model.SelectedGender);
+        }
+
+        if (!string.IsNullOrEmpty(model.SelectedCategory))
+        {
+            results = results.Where(r => r.IdSubCompetition2Navigation.IdCategoryNavigation.NameCategory == model.SelectedCategory);
+        }
 
         if (!string.IsNullOrEmpty(model.SelectedCountry))
         {
-            athletes = athletes.Where(a => a.Country == model.SelectedCountry);
+            results = results.Where(r => r.IdAthleteNavigation.CountryNavigation.NameCountry == model.SelectedCountry);
         }
 
-        model.Countries = await _context.Countries.Select(c => c.NameCountry).ToListAsync();
-        model.Results = athletes.OrderByDescending(a => a.TotalPoints).ToList();
+        // Group and project final results
+        var grouped = await results
+            .GroupBy(r => new
+            {
+                r.IdAthleteNavigation.IdAthlete,
+                r.IdAthleteNavigation.Name,
+                Country = r.IdAthleteNavigation.CountryNavigation.NameCountry
+            })
+            .Select(g => new AthletePointsViewModel
+            {
+                IdAthlete = g.Key.IdAthlete,
+                Name = g.Key.Name,
+                Country = g.Key.Country,
+                TotalPoints = g.Sum(x => (int?)x.Points) ?? 0
+            })
+            .OrderByDescending(a => a.TotalPoints)
+            .ToListAsync();
 
+        // Populate dropdowns
+        model.Countries = await _context.Countries
+            .OrderBy(c => c.NameCountry)
+            .Select(c => c.NameCountry)
+            .ToListAsync();
+
+        model.AgeClasses = await _context.Categories
+            .Select(c => c.AgeClass)
+            .Distinct()
+            .OrderBy(a => a)
+            .ToListAsync();
+
+        model.Genders = await _context.Categories
+            .Select(c => c.Mf)
+            .Distinct()
+            .OrderBy(g => g)
+            .ToListAsync();
+
+        // This is the cascading dropdown part
+        model.Categories = await _context.Categories
+            .Where(c =>
+                (string.IsNullOrEmpty(model.SelectedAgeClass) || c.AgeClass == model.SelectedAgeClass) &&
+                (string.IsNullOrEmpty(model.SelectedGender) || c.Mf == model.SelectedGender))
+            .Select(c => c.NameCategory)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToListAsync();
+
+        model.Results = grouped;
         return model;
     }
 

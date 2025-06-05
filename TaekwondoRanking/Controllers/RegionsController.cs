@@ -77,6 +77,5 @@ namespace TaekwondoRanking.Controllers
         }
 
 
-
     }
 }

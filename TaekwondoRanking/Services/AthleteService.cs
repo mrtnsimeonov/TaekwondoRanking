@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaekwondoRanking.Models;
 using TaekwondoRanking.ViewModels;
+using TaekwondoRanking.Helpers;
 
 public class AthleteService : IAthleteService
 {
@@ -54,5 +55,17 @@ public class AthleteService : IAthleteService
             .Where(a => a.Name.Contains(name))
             .ToList();
     }
+    public async Task<IEnumerable<Athlete>> GetTemporarilyDeletedAthletesAsync()
+    {
+        var deletedAthleteIds = TemporaryDeletionManager.TemporarilyDeletedAthleteIds.Keys;
 
+        if (!deletedAthleteIds.Any())
+        {
+            return new List<Athlete>(); // Return an empty list if no one is deleted
+        }
+
+        return await _context.Athletes
+                             .Where(a => deletedAthleteIds.Contains(a.IdAthlete))
+                             .ToListAsync();
+    }
 }

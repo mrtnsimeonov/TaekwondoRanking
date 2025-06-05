@@ -7,5 +7,5 @@ public interface IAthleteService
     Task<Athlete?> GetAthleteByIdAsync(string id);
     Task<List<AthleteTournamentHistoryViewModel>> GetAthleteHistoryAsync(string athleteId);
     IEnumerable<Athlete> SearchAthletesByName(string name);
-
+    Task<IEnumerable<Athlete>> GetTemporarilyDeletedAthletesAsync();
 }

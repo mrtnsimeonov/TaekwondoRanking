@@ -47,6 +47,20 @@ namespace TaekwondoRanking.Controllers
             return RedirectToAction("World", "Regions");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public IActionResult Restore(string id)
+        {
+            if (id != null)
+            {
+                // Use TryRemove to take the athlete's ID out of the dictionary
+                TemporaryDeletionManager.TemporarilyDeletedAthleteIds.TryRemove(id, out _);
+            }
 
+            TempData["SuccessMessage"] = "Athlete successfully restored.";
+            // Redirect back to the page that shows the list of deleted athletes
+            return RedirectToAction("DeletedAthletes", "Home");
+        }
     }
 }

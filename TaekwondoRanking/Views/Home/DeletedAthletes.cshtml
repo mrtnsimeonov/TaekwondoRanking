@@ -1,0 +1,41 @@
+﻿@model IEnumerable<TaekwondoRanking.Models.Athlete>
+
+@{
+    ViewData["Title"] = "Restore Deleted Athletes";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (Model.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Athlete ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var athlete in Model)
+            {
+                <tr>
+                    <td>@athlete.IdAthlete</td>
+                    <td>@athlete.Name</td>
+                    <td>
+                        <form asp-controller="Athletes" asp-action="Restore" asp-route-id="@athlete.IdAthlete" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Restore
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>There are no temporarily deleted athletes to restore.</p>
+}

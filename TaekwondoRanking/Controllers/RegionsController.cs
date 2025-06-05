@@ -5,6 +5,7 @@ using TaekwondoRanking.Services;
 using TaekwondoRanking.ViewModels;
 using TaekwondoRanking.Models;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace TaekwondoRanking.Controllers
 {
@@ -75,6 +76,21 @@ namespace TaekwondoRanking.Controllers
             var updatedModel = await _regionService.ApplyCountryRankingFiltersAsync(model, reset, search);
             return View(updatedModel);
         }
+        [HttpGet]
+        public async Task<JsonResult> GetCategories(string ageClass, string gender)
+        {
+            var categories = await _context.Categories
+                .Where(c =>
+                    (string.IsNullOrEmpty(ageClass) || c.AgeClass == ageClass) &&
+                    (string.IsNullOrEmpty(gender) || c.Mf == gender))
+                .Select(c => c.NameCategory)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            return Json(categories);
+        }
+
 
 
     }

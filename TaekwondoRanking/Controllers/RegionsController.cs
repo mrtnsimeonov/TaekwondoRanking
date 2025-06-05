@@ -20,6 +20,7 @@ namespace TaekwondoRanking.Controllers
             _context = context; // ADD
         }
 
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)] // Cache
         [HttpGet]
         public async Task<IActionResult> World()
         {
@@ -27,13 +28,14 @@ namespace TaekwondoRanking.Controllers
             return View(model);
         }
 
-        [HttpPost]
+        [HttpPost]        
         public async Task<IActionResult> World(WorldRankingFilterViewModel model, string? reset, string? search)
         {
             var updatedModel = await _regionService.ApplyWorldRankingFiltersAsync(model, reset, search);
             return View(updatedModel);
         }
 
+        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)] // Cache
         [HttpGet]
         public IActionResult Continental()
         {
@@ -63,6 +65,7 @@ namespace TaekwondoRanking.Controllers
             return View(model);
         }
 
+        [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)] // Cache 
         [HttpGet]
         public async Task<IActionResult> Country()
         {
@@ -76,6 +79,8 @@ namespace TaekwondoRanking.Controllers
             var updatedModel = await _regionService.ApplyCountryRankingFiltersAsync(model, reset, search);
             return View(updatedModel);
         }
+
+        [ResponseCache(Duration = 600, Location = ResponseCacheLocation.Any, NoStore = false, VaryByQueryKeys = new[] { "ageClass", "gender" })] // Cache 
         [HttpGet]
         public async Task<JsonResult> GetCategories(string ageClass, string gender)
         {

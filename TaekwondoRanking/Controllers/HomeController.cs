@@ -19,6 +19,7 @@ namespace TaekwondoRanking.Controllers
         
         public IActionResult World() => View("~/Views/Regions/World.cshtml");
 
+        [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)] // Cache
         public IActionResult About()
         {
             return View();

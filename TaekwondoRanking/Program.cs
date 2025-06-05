@@ -49,6 +49,20 @@ builder.Services.AddScoped<IRegionService, RegionService>();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+builder.Services.AddResponseCaching(); // <--- ADD THIS LINE
+
+// Configure authentication options (example, adjust if you have specific needs)
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Cookie settings
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Error/401"; // Redirect to your custom 401 error page
+    options.SlidingExpiration = true;
+});
+
 
 var app = builder.Build();
 
@@ -69,6 +83,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseResponseCaching(); // <--- ADD THIS LINE
 
 app.UseAuthentication(); // Make sure this is before UseAuthorization
 app.UseAuthorization();

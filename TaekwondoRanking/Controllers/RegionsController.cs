@@ -28,7 +28,8 @@ namespace TaekwondoRanking.Controllers
             return View(model);
         }
 
-        [HttpPost]        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> World(WorldRankingFilterViewModel model, string? reset, string? search)
         {
             var updatedModel = await _regionService.ApplyWorldRankingFiltersAsync(model, reset, search);
@@ -50,6 +51,7 @@ namespace TaekwondoRanking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Continental(ContinentalRankingFilterViewModel model, string? submitType)
         {
             model.AgeClasses ??= new List<string> { "Junior", "Senior" };
@@ -74,6 +76,7 @@ namespace TaekwondoRanking.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Country(CountryRankingFilterViewModel model, string? reset, string? search)
         {
             var updatedModel = await _regionService.ApplyCountryRankingFiltersAsync(model, reset, search);

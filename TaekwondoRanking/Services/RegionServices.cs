@@ -105,7 +105,9 @@ public class RegionService : IRegionService
         {
             model.Categories = await _context.Categories
                 .Where(c => c.AgeClass == model.SelectedAgeClass && c.Mf == model.SelectedGender)
+                .OrderBy(c => c.NameCategory)
                 .Select(c => c.NameCategory).Distinct().ToListAsync();
+
         }
         else
         {
@@ -149,10 +151,11 @@ public class RegionService : IRegionService
             .Where(c =>
                 (string.IsNullOrEmpty(model.SelectedAgeClass) || c.AgeClass == model.SelectedAgeClass) &&
                 (string.IsNullOrEmpty(model.SelectedGender) || c.Mf == model.SelectedGender))
+            .OrderBy(c => c.NameCategory)
             .Select(c => c.NameCategory)
             .Distinct()
-            .OrderBy(c => c)
             .ToListAsync();
+
 
         return model;
     }

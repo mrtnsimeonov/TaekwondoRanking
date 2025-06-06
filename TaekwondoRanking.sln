@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaekwondoRanking", "TaekwondoRanking\TaekwondoRanking.csproj", "{94E8151C-D72D-4110-9C27-7893214E3DAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaekwondoRanking", "TaekwondoRanking\TaekwondoRanking.csproj", "{94E8151C-D72D-4110-9C27-7893214E3DAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaekwondoRanking.Tests", "TaekwondoRanking.Tests\TaekwondoRanking.Tests.csproj", "{D8ECD93A-E9CE-4317-8865-C613ECCAECF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{94E8151C-D72D-4110-9C27-7893214E3DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94E8151C-D72D-4110-9C27-7893214E3DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94E8151C-D72D-4110-9C27-7893214E3DAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8ECD93A-E9CE-4317-8865-C613ECCAECF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8ECD93A-E9CE-4317-8865-C613ECCAECF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8ECD93A-E9CE-4317-8865-C613ECCAECF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8ECD93A-E9CE-4317-8865-C613ECCAECF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
